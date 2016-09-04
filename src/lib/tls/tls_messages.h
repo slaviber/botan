@@ -450,7 +450,8 @@ class Certificate_Verify final : public Handshake_Message
       */
       bool verify(const X509_Certificate& cert,
                   const Handshake_State& state,
-                  const Policy& policy) const;
+                  const Policy& policy,
+                  RandomNumberGenerator& rng) const;
 
       Certificate_Verify(Handshake_IO& io,
                          Handshake_State& state,
@@ -519,7 +520,8 @@ class Server_Key_Exchange final : public Handshake_Message
 
       bool verify(const Public_Key& server_key,
                   const Handshake_State& state,
-                  const Policy& policy) const;
+                  const Policy& policy,
+                  RandomNumberGenerator& rng) const;
 
       // Only valid for certain kex types
       const Private_Key& server_kex_key() const;
