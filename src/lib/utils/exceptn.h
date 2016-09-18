@@ -64,6 +64,11 @@ struct BOTAN_DLL Invalid_State : public Exception
 */
 struct BOTAN_DLL Lookup_Error : public Exception
    {
+   static Lookup_Error Provider_Not_Found(const std::string& algo, const std::string& req_provider)
+      {
+      return Lookup_Error("Could not find provider '" + req_provider + "' for " + algo);
+      }
+
    explicit Lookup_Error(const std::string& err) :
       Exception(err)
       {}
@@ -139,16 +144,6 @@ struct BOTAN_DLL No_Provider_Found : public Exception
    explicit No_Provider_Found(const std::string& name) :
       Exception("Could not find any provider for algorithm named \"" + name + "\"")
       {}
-   };
-
-/**
-* Provider_Not_Found is thrown when a specific provider was requested
-* but that provider is not available.
-*/
-struct BOTAN_DLL Provider_Not_Found : public Lookup_Error
-   {
-   Provider_Not_Found(const std::string& algo, const std::string& provider) :
-      Lookup_Error("Could not find provider '" + provider + "' for " + algo) {}
    };
 
 /**

@@ -203,7 +203,7 @@ DSA_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Verification>(new DSA_Verification_Operation(*this, params));
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -213,7 +213,7 @@ DSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Signature>(new DSA_Signature_Operation(*this, params));
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 }

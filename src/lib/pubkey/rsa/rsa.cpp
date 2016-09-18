@@ -432,7 +432,7 @@ RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
 
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Encryption>(new RSA_Encryption_Operation(*this, params));
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::KEM_Encryption>
@@ -442,7 +442,7 @@ RSA_PublicKey::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::KEM_Encryption>(new RSA_KEM_Encryption_Operation(*this, params));
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Verification>
@@ -461,7 +461,7 @@ RSA_PublicKey::create_verification_op(const std::string& params,
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Verification>(new RSA_Verify_Operation(*this, params));
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Decryption>
@@ -487,7 +487,7 @@ RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Decryption>(new RSA_Decryption_Operation(*this, params, rng));
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::KEM_Decryption>
@@ -498,7 +498,7 @@ RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::KEM_Decryption>(new RSA_KEM_Decryption_Operation(*this, params, rng));
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -518,7 +518,7 @@ RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Signature>(new RSA_Signature_Operation(*this, params, rng));
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 }

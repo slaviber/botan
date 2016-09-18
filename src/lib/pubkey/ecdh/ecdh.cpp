@@ -75,7 +75,7 @@ ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Key_Agreement>(new ECDH_KA_Operation(*this, params));
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 

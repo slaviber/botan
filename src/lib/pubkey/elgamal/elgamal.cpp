@@ -190,7 +190,7 @@ ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Encryption>(new ElGamal_Encryption_Operation(*this, params));
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Decryption>
@@ -200,7 +200,7 @@ ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Decryption>(new ElGamal_Decryption_Operation(*this, params, rng));
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 }

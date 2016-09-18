@@ -146,7 +146,7 @@ ECGDSA_PublicKey::create_verification_op(const std::string& params,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Verification>(new ECGDSA_Verification_Operation(*this, params));
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -156,7 +156,7 @@ ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Signature>(new ECGDSA_Signature_Operation(*this, params));
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Lookup_Error::Provider_Not_Found(algo_name(), provider);
    }
 
 }
