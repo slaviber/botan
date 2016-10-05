@@ -21,10 +21,7 @@ class BOTAN_DLL Request
    {
    public:
       Request(const X509_Certificate& issuer_cert,
-              const X509_Certificate& subject_cert) :
-         m_issuer(issuer_cert),
-         m_subject(subject_cert)
-         {}
+              const X509_Certificate& subject_cert);
 
       std::vector<byte> BER_encode() const;
 
@@ -33,8 +30,12 @@ class BOTAN_DLL Request
       const X509_Certificate& issuer() const { return m_issuer; }
 
       const X509_Certificate& subject() const { return m_subject; }
+
+      const std::vector<byte>& issuer_key_hash() const
+         { return m_certid.issuer_key_hash(); }
    private:
       X509_Certificate m_issuer, m_subject;
+      CertID m_certid;
    };
 
 class BOTAN_DLL Response
@@ -42,7 +43,8 @@ class BOTAN_DLL Response
    public:
       Response() {}
 
-      Response(const std::vector<byte>& response);
+      Response(const Request& request,
+               const std::vector<byte>& response);
 
       // Throws if validation failed
       void check_signature(const Certificate_Store& trust_roots);
@@ -63,6 +65,11 @@ class BOTAN_DLL Response
       std::vector<SingleResponse> m_responses;
    };
 
+/**
+* Perform an OCSP request and return the response
+*
+* If trust_roots is set the signature is verified
+*/
 BOTAN_DLL Response online_check(const X509_Certificate& issuer,
                                 const X509_Certificate& subject,
                                 const Certificate_Store* trusted_roots);
