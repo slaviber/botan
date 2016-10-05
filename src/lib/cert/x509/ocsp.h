@@ -42,13 +42,24 @@ class BOTAN_DLL Response
    public:
       Response() {}
 
-      Response(const Certificate_Store& trusted_roots,
-               const std::vector<byte>& response);
+      Response(const std::vector<byte>& response);
+
+      // Throws if validation failed
+      void check_signature(const Certificate_Store& trust_roots);
+
+      const X509_Time& produced_at() const { return m_produced_at; }
 
       Certificate_Status_Code status_for(const X509_Certificate& issuer,
                                                const X509_Certificate& subject) const;
 
    private:
+      X509_Time m_produced_at;
+      X509_DN m_signer_name;
+      std::vector<byte> m_tbs_bits;
+      AlgorithmIdentifier m_sig_algo;
+      std::vector<byte> m_signature;
+      std::vector<X509_Certificate> m_certs;
+
       std::vector<SingleResponse> m_responses;
    };
 
