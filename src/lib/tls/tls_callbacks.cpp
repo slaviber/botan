@@ -30,14 +30,7 @@ TLS::Callbacks::tls_make_http_request(const std::string& url,
                                       const std::string& content_type,
                                       const std::vector<byte>& body)
    {
-   auto get_http_body = [=]() -> std::vector<byte>
-      {
-      HTTP::Response resp = HTTP::http_sync(url, verb, content_type, body, 1);
-      resp.throw_unless_ok();
-      return resp.body();
-      };
-
-   return std::async(std::launch::async, get_http_body);
+   return HTTP::async_get_body(url, verb, content_type, body);
    }
 
 namespace {
@@ -64,11 +57,18 @@ void TLS::Callbacks::tls_verify_cert_chain(
 
    Path_Validation_Restrictions restrictions;
 
-   Path_Validation_Result result = x509_path_validate(cert_chain,
-                                                      restrictions,
-                                                      trusted_roots,
-                                                      hostname,
-                                                      usage);
+   using namespace std::placeholders;
+   auto make_http_req = std::bind(&TLS::Callbacks::tls_make_http_request,
+                                  this, _1, _2, _3, _4);
+
+   Path_Validation_Result result =
+      x509_path_validate(cert_chain,
+                         restrictions,
+                         trusted_roots,
+                         hostname,
+                         usage,
+                         make_http_req
+      );
 
    if(!result.successful_validation())
       throw Exception("Certificate validation failure: " + result.result_string());

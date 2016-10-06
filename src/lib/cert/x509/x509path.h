@@ -12,6 +12,7 @@
 #include <botan/x509cert.h>
 #include <botan/certstor.h>
 #include <botan/ocsp.h>
+#include <botan/http_util.h>
 #include <future>
 #include <functional>
 #include <set>
@@ -136,20 +137,17 @@ class BOTAN_DLL Path_Validation_Result
       std::vector<std::shared_ptr<const X509_Certificate>> m_cert_path;
    };
 
-typedef std::function<std::future<OCSP::Response>
-                      (const X509_Certificate&,
-                       const X509_Certificate&)>
-   OCSP_request_fn;
-
 /**
-* Make an OCSP request via a new network connection
-* opened in a std::async thread.
-*
-* The response signature is not verified before returning.
+* Callback function used during path validation to request
+* OCSP and CRLs via HTTP. Returns a future of the body of
+* the response, if OK, or otherwise throwing an exception.
 */
-BOTAN_DLL std::future<OCSP::Response>
-make_ocsp_request(const X509_Certificate& issuer,
-                  const X509_Certificate& subject);
+typedef std::function<
+std::future<std::vector<byte>> (const std::string& url,
+                                const std::string& verb,
+                                const std::string& content_type,
+                                const std::vector<byte>& body)>
+  X509_make_http_request;
 
 /**
 * PKIX Path Validation
@@ -158,8 +156,9 @@ make_ocsp_request(const X509_Certificate& issuer,
 * @param certstores trusted certificates
 * @param hostname the expected hostname of the end entity
 * @param usage what this certificate is to be used for
-* @param ocsp_check is a callback requesting an OCSP check be issued,
-*        default online_ocsp_check opens socket in a new thread.
+* @param http is a callback for making an HTTP request (GET or POST),
+*        used for accessing OCSP and CRL data. Default impl opens a
+*        a new socket in a new thread.
 */
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
@@ -167,7 +166,7 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
    const std::vector<Certificate_Store*>& certstores,
    const std::string& hostname = "",
    Usage_Type usage = Usage_Type::UNSPECIFIED,
-   OCSP_request_fn ocsp_check = make_ocsp_request);
+   X509_make_http_request http = HTTP::async_get_body);
 
 /**
 * PKIX Path Validation
@@ -178,11 +177,11 @@ inline Path_Validation_Result x509_path_validate(
    const std::vector<Certificate_Store*>& certstores,
    const std::string& hostname = "",
    Usage_Type usage = Usage_Type::UNSPECIFIED,
-   OCSP_request_fn ocsp = make_ocsp_request)
+   X509_make_http_request http = HTTP::async_get_body)
    {
    std::vector<X509_Certificate> end_certs;
    end_certs.push_back(end_cert);
-   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage, ocsp);
+   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage, http);
    }
 
 /**
@@ -194,14 +193,14 @@ inline Path_Validation_Result x509_path_validate(
    const Certificate_Store& store,
    const std::string& hostname = "",
    Usage_Type usage = Usage_Type::UNSPECIFIED,
-   OCSP_request_fn ocsp = make_ocsp_request)
+   X509_make_http_request http = HTTP::async_get_body)
    {
    std::vector<X509_Certificate> end_certs;
    end_certs.push_back(end_cert);
 
    std::vector<Certificate_Store*> certstores;
    certstores.push_back(const_cast<Certificate_Store*>(&store));
-   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage, ocsp);
+   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage, http);
    }
 
 /**
@@ -213,12 +212,12 @@ inline Path_Validation_Result x509_path_validate(
    const Certificate_Store& store,
    const std::string& hostname = "",
    Usage_Type usage = Usage_Type::UNSPECIFIED,
-   OCSP_request_fn ocsp = make_ocsp_request)
+   X509_make_http_request http = HTTP::async_get_body)
    {
    std::vector<Certificate_Store*> certstores;
    certstores.push_back(const_cast<Certificate_Store*>(&store));
 
-   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage, ocsp);
+   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage, http);
    }
 
 }

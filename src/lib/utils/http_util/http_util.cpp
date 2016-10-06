@@ -10,6 +10,7 @@
 #include <botan/hex.h>
 #include <botan/internal/stl_util.h>
 #include <sstream>
+#include <future>
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
 
@@ -167,6 +168,9 @@ Response http_sync(http_exch_fn http_transact,
                    const std::vector<byte>& body,
                    size_t allowable_redirects)
    {
+   if(url.empty())
+      throw HTTP_Error("Empty URL specified");
+
    const auto protocol_host_sep = url.find("://");
    if(protocol_host_sep == std::string::npos)
       throw HTTP_Error("Invalid URL " + url);
@@ -185,6 +189,9 @@ Response http_sync(http_exch_fn http_transact,
       hostname = url.substr(protocol_host_sep + 3, host_loc_sep-protocol_host_sep-3);
       loc = url.substr(host_loc_sep, std::string::npos);
       }
+
+   if(hostname.empty())
+      throw HTTP_Error("Invalid URL, no hostname specified");
 
    std::ostringstream outbuf;
 
@@ -298,6 +305,23 @@ std::future<Response> GET_async(const std::string& url, size_t allowable_redirec
    {
    return std::async(std::launch::async, GET_sync, url, allowable_redirects);
    }
+
+std::future<std::vector<uint8_t>>
+async_get_body(const std::string& verb,
+               const std::string& url,
+               const std::string& content_type,
+               const std::vector<byte>& body)
+   {
+   auto get_http_body = [=]() -> std::vector<byte>
+      {
+      HTTP::Response resp = HTTP::http_sync(url, verb, content_type, body, 1);
+      resp.throw_unless_ok();
+      return resp.body();
+      };
+
+   return std::async(std::launch::async, get_http_body);
+   }
+
 
 }
 

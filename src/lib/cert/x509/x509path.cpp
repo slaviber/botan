@@ -79,7 +79,7 @@ std::vector<std::set<Certificate_Status_Code>>
 check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
             const Path_Validation_Restrictions& restrictions,
             const std::vector<Certificate_Store*>& certstores,
-            OCSP_request_fn ocsp_request)
+            X509_make_http_request make_http_req)
    {
    const std::set<std::string>& trusted_hashes = restrictions.trusted_hashes();
 
@@ -87,7 +87,8 @@ check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_pat
 
    X509_Time current_time(std::chrono::system_clock::now());
 
-   std::vector<std::future<OCSP::Response>> ocsp_responses;
+   std::vector<OCSP::Request> ocsp_requests;
+   std::vector<std::future<std::vector<byte>>> ocsp_responses;
 
    std::vector<std::set<Certificate_Status_Code>> cert_status(cert_path.size());
 
@@ -103,11 +104,13 @@ check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_pat
 
       if(i == 0 || restrictions.ocsp_all_intermediates())
          {
-         // certstore[0] is treated as trusted for OCSP (FIXME)
-         if(certstores.size() > 1)
-            {
-            ocsp_responses.push_back(ocsp_request(*issuer, *subject));
-            }
+         ocsp_requests.push_back(OCSP::Request(*issuer, *subject));
+
+         ocsp_responses.emplace_back(
+            make_http_req("POST",
+                          subject->ocsp_responder(),
+                          "application/ocsp-request",
+                          ocsp_requests[i].BER_encode()));
          }
 
       // Check all certs for valid time range
@@ -166,7 +169,9 @@ check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_pat
          {
          try
             {
-            OCSP::Response ocsp = ocsp_responses[i].get();
+            std::vector<byte> http_body = ocsp_responses[i].get();
+
+            OCSP::Response ocsp(ocsp_requests[i], http_body);
 
             bool ocsp_valid = false;
 
@@ -233,22 +238,13 @@ check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_pat
 
 }
 
-std::future<OCSP::Response>
-make_ocsp_request(const X509_Certificate& issuer,
-                  const X509_Certificate& subject)
-   {
-   return std::async(std::launch::async,
-                     OCSP::online_check,
-                     issuer, subject, nullptr);
-   }
-
 Path_Validation_Result x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
    const std::vector<Certificate_Store*>& certstores,
    const std::string& hostname,
    Usage_Type usage,
-   OCSP_request_fn ocsp_request)
+   X509_make_http_request http)
    {
    if(end_certs.empty())
       throw Invalid_Argument("x509_path_validate called with no subjects");
@@ -284,7 +280,7 @@ Path_Validation_Result x509_path_validate(
       }
 
    std::vector<std::set<Certificate_Status_Code>> res =
-      check_chain(cert_path, restrictions, certstores, ocsp_request);
+      check_chain(cert_path, restrictions, certstores, http);
 
    if(!hostname.empty() && !cert_path[0]->matches_dns_name(hostname))
       res[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
