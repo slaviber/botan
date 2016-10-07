@@ -31,7 +31,13 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         elif [ "$BUILD_MODE" = "cross-ppc32" ]; then
             sudo apt-get install g++-4.8-powerpc-linux-gnu libc6-dev-powerpc-cross qemu-user
         elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
-            sudo apt-get install g++-4.8-powerpc64le-linux-gnu libc6-dev-ppc64el-cross qemu-user
+            sudo apt-get install g++-4.8-powerpc64le-linux-gnu libc6-dev-ppc64el-cross
+
+            # Need updated qemu for ppc64le
+            sudo add-apt-repository ppa:ubuntu-cloud-archive/kilo-staging
+            sudo apt-get -qq update
+            sudo apt-get install qemu
+
         elif [ "$BUILD_MODE" = "cross-win32" ]; then
             sudo apt-get install g++-mingw-w64-i686 mingw-w64-i686-dev
 
