@@ -28,12 +28,16 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
             sudo apt-get install g++-4.8-arm-linux-gnueabihf libc6-dev-armhf-cross qemu-user
         elif [ "$BUILD_MODE" = "cross-arm64" ]; then
             sudo apt-get install g++-4.8-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user
-        elif [ "$BUILD_MODE" = "cross-ppc32" ]; then
-            sudo apt-get install g++-4.8-powerpc-linux-gnu libc6-dev-powerpc-cross qemu-user
-        elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
-            sudo apt-get install g++-4.8-powerpc64le-linux-gnu libc6-dev-ppc64el-cross
+        elif [ "$BUILD_MODE" = "cross-ppc32" ] || [ "$BUILD_MODE" = "cross-ppc64" ]; then
+            sudo apt-get install g++-4.8-powerpc-linux-gnu libc6-dev-powerpc-cross
 
-            # Need updated qemu for ppc64le
+            if [ "$BUILD_MODE" = "cross-ppc32" ]; then
+                sudo apt-get install g++-4.8-powerpc-linux-gnu libc6-dev-powerpc-cross
+            elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
+                sudo apt-get install g++-4.8-powerpc64le-linux-gnu libc6-dev-ppc64el-cross
+            fi
+
+            # Need updated qemu for ppc
             sudo add-apt-repository -y ppa:ubuntu-cloud-archive/kilo-staging
             sudo apt-get -qq update
             sudo apt-get install qemu
