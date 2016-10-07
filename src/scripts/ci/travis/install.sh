@@ -34,7 +34,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
             sudo apt-get install g++-4.8-powerpc64le-linux-gnu libc6-dev-ppc64el-cross
 
             # Need updated qemu for ppc64le
-            sudo add-apt-repository ppa:ubuntu-cloud-archive/kilo-staging
+            sudo add-apt-repository -y ppa:ubuntu-cloud-archive/kilo-staging
             sudo apt-get -qq update
             sudo apt-get install qemu
 
